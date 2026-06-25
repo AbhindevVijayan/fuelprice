@@ -2,10 +2,10 @@
 *****************📌 Overview*****************
 
 This project is a full-stack fuel optimization system that calculates an optimal driving route between two locations in the USA and suggests cost-effective fuel stops along the journey.
-
 It uses real-world routing data and a fuel price dataset to minimize total fuel cost while respecting vehicle constraints.
 
 *******🚀 Features********
+
 🌍 Get route between any two US locations
 🛣️ Real-world routing using OpenRouteService API
 ⛽ Smart fuel stop planning based on:
@@ -55,6 +55,7 @@ fuelplanner/
 │
 ├── fuelplanner/
 ├── manage.py
+
 
 
 *****🔧 API Endpoint********
