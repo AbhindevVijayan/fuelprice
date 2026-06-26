@@ -5,6 +5,8 @@ from .services.geo import geocode
 from .services.routing import get_route
 from .services.fuel import plan_optimal_fuel_stops, fuel_data
 from django.core.cache import cache
+import hashlib
+
 
 
 @api_view(['POST'])
@@ -15,41 +17,51 @@ def route_fuel_plan(request):
     if not start or not end:
         return Response({"error": "start and end required"})
 
-    # 🔥 CACHE KEY (normalize input)
-    cache_key = f"route:{start.strip().lower()}_{end.strip().lower()}"
-    cached_result = cache.get(cache_key)
+    # 🔥 Normalize input
+    start_clean = start.strip().lower()
+    end_clean = end.strip().lower()
 
-    # ✅ RETURN FAST RESPONSE IF EXISTS
+    # 🔑 SAFE CACHE KEY (no warnings, production-safe)
+    raw_key = f"{start_clean}_{end_clean}"
+    cache_key = "route:" + hashlib.md5(raw_key.encode()).hexdigest()
+    print("CACHE KEY USED:", cache_key)
+
+    # ⚡ Check cache first
+    cached_result = cache.get(cache_key)
     if cached_result:
         return Response(cached_result)
 
+    # 📍 Geocode (1st external API)
     start_coords = geocode(start)
     end_coords = geocode(end)
 
     if not start_coords or not end_coords:
         return Response({"error": "invalid location"})
 
+    # 🗺️ Routing API (2nd external API - allowed by requirement)
     route = get_route(start_coords, end_coords)
 
     distance = route["distance_miles"]
     geometry = route["geometry"]
 
+    # ⛽ Fuel optimization logic
     fuel_stops, fuel_cost = plan_optimal_fuel_stops(
         distance,
         geometry,
         fuel_data
     )
 
+    # 📦 Final response
     response_data = {
         "start": start,
         "end": end,
-        "distance_miles": distance,
+        "distance_miles": round(distance, 2),
         "route_map": geometry,
         "fuel_stops": fuel_stops,
-        "total_fuel_cost": fuel_cost
+        "total_fuel_cost": round(fuel_cost, 2)
     }
 
-    # 🔥 STORE RESULT IN CACHE (1 hour)
+    # 💾 Cache result (1 hour)
     cache.set(cache_key, response_data, timeout=3600)
 
     return Response(response_data)

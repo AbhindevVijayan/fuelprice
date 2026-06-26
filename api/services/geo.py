@@ -1,8 +1,16 @@
 import requests
-from functools import lru_cache
+from django.core.cache import caches
 
-@lru_cache(maxsize=1000)
+cache = caches["geo"]
+
 def geocode(place):
+    print("🔥 CALLING GEOCODE API") 
+    cache_key = f"geo:{place.lower().strip()}"
+
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
     url = "https://nominatim.openstreetmap.org/search"
 
     params = {
@@ -22,4 +30,8 @@ def geocode(place):
     if not data:
         return None
 
-    return (float(data[0]["lon"]), float(data[0]["lat"]))
+    result = (float(data[0]["lon"]), float(data[0]["lat"]))
+
+    cache.set(cache_key, result)
+
+    return result

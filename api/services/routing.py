@@ -1,6 +1,8 @@
 import requests
 from functools import lru_cache
-ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImEyMDJjMzkzOWRjYzQzZGRhZTg0MTY2YmIyM2ZlODIwIiwiaCI6Im11cm11cjY0In0="
+import os
+
+ORS_API_KEY = os.getenv("ORS_API_KEY")
 
 
 @lru_cache(maxsize=1000)
